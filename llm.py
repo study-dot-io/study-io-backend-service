@@ -1,0 +1,55 @@
+import openai
+import os
+import json
+from dotenv import load_dotenv
+
+load_dotenv()
+
+openai.api_key = os.getenv("OPENROUTER_API_KEY")
+openai.api_base = "https://openrouter.ai/api/v1"
+
+#Gpt template idk prompt 
+PROMPT_TEMPLATE = """
+Generate flashcards from this text. Return a JSON list with 'front' and 'back' keys. Return a max of only 10 flashcards.
+
+Text:
+{chunk}
+
+Return only the JSON list, like:
+[
+  {{"front": "...", "back": "..."}},
+  ...
+]
+"""
+
+def generate_flashcards(chunk):
+    prompt = PROMPT_TEMPLATE.format(chunk=chunk)
+    try:
+        response = openai.ChatCompletion.create(model="mistralai/mistral-small-3.2-24b-instruct:free", 
+                                                messages=[{"role": "user", "content": prompt}],
+                                                temperature=0.7)
+        content = response.choices[0].message.content.strip()
+        #fix for making sure JSON response
+        # return json.loads(content) if content.startswith("[") else []
+        # Remove markdown formatting like ```json ... ```
+        print("LLM Response:", content)
+        print("************************************")
+        #clean up in case
+        if content.startswith("```json"):
+            content = content.removeprefix("```json").removesuffix("```").strip()
+        elif content.startswith("```"):
+            content = content.removeprefix("```").removesuffix("```").strip()
+        print(content)
+        return json.loads(content)
+    # except Exception as e:
+    #     print("LLM Error:", e)
+    #     return []
+    except json.JSONDecodeError as e:
+        print("JSON Decode Error:", e)
+        return []
+    
+    
+test_chunk = ['study.io CS 446/CS 646/ECE 452 - Spring 2025 Group 25 Evan Howie (ehowie), Max Naegel (mnaegel), Ethan Bitnun (ebitnun), Aditya Chaudhary(a87chaud), Ameya Gawde(agawde), Abhinav Prasad (a32prasa) Github Repo link: https://github.com/a87chaud/Study.io 1. Project Introduction What is your project? Our project is largely a flashcard study tool similar to Anki. Unlike traditional flashcard tools, our application allows users to upload their course notes, from which flashcards are automatically generated. The primary twist in our application is adding an accountability aspect to the application. This accountability aspect comes in two forms: 1: The first is similar to Duolingo, where users can create study schedules which the application will hold them accountable to. We will also add other gamification mechanisms like streaks 2: The second is similar to BeReal, where there is a social accountability aspect. Users will be able to see the work their friends did in a day. E.g. seeing flashcards they have created or seeing flashcards they have studied. This is meant to motivate people with peer pressure and also to have people show off cool things they are currently learning. Why is your project interesting? The social accountability and gamification of the app is intended to make studying more motivating and engaging. While the social pressure to perform work can be seen as a bad thing in a ‘hustle culture’, our idea is interesting because we want to apply this pressure to force students to do something they typically do not want to do (but should be doing for their academic life!). Another interesting aspect of our project is how we use AI. One functional requirement we want is having users be able to create an answer for a flashcard from a question. This use case of AI is interesting as AI is a powerful tool which can be used to help and harm. Academic integrity is particularly in focus in AI discussions. Our application tries to use AI to help by leveraging it to streamline flashcard creation (e.g. using it to create an answer for a flashcard from a question) without replacing the critical thinking process of actively recalling answers. In other words, AI is commonly used to replace the recalling process for remembering concepts as it easily gives answers to questions. Our application adds this back in by having students recall what the AI has explained to them in the future. Justify your project selection + why does this project make sense in a mobile form factor? Our application is a relatively innocuous application which tries to push students to study. Our project applies trendy ideas from popular apps to push users to use the app consistently without absorbing the user’s time in a way which would harm them. Our application makes sense in a mobile form factor for the same reason an application like Duolingo makes sense – studying on the go allows users to kill time in a more productive way rather than doing more self-destructive behavior like doom scrolling short-form content. Functional Requirements: ● Flash Card Generation and Management: The app allows users to create flashcards automatically using LLMs from typed questions, uploaded PDFs. Users can also manually edit or create flashcards, ensuring accuracy and customization. Before saving, generated content can be reviewed, and cards are organized into decks with tags for easy navigation and reuse ● Study Scheduling and Habit Formation: Users can set study goals across various timeframes and receive AI-generated daily quizzes based on spaced repetition. Content generation can be scheduled ahead of time, while visual streaks and reminders help maintain consistency and reinforce healthy study habits. ● Social and Collaboration Features: The platform encourages peer motivation with friend feeds, visible study streaks. Users can exchange flashcards or notes, and interact through comments and reactions to stay connected and accountable ● Access control and Privacy: Users have full control over accessibility of their content. They can choose to keep their flashcards private, public or shareable within a group of people. ● Progress Tracking and Analytics: A personalized dashboard shows key stats like flashcards reviewed, mastered, and time spent studying. Users can view timelines of their completed goals and gain insights into weak areas through quiz performance analysis, helping them target their learning effectively. User Scenarios 1. Bjorn and Bob have an exam coming up and want to solidify their conceptual knowledge. They each upload their course notes so far, and the LLM generates flash cards accordingly for each of them. Once setting their study schedules, they make sure to maintain their study streak. Every programmed study interval, study.io assesses their progress and feeds them flash cards covering new concepts, as well as old concepts that were particularly challenging. Bjorn and Bob both make sure to pull out their phone whenever they want to kill some time, like on the bus, and make some progress. Throughout the exam prep, Bjorn checks on Bob’s progress and streaks through the friend system. He sees that John is making consistent progress, and now Bjorn is remotivated to continue studying. 2. Mr.Smith, a high school teacher, logs onto his account and uploads a set of his personalised notes. The system then extracts key knowledge, concepts and definitions from it and forms quizzes and flashcards. Mr.Smith decides to make them public and shares it with the rest of the class using a class link. Students can then access the content and learn at their own pace while Mr.Smith monitors their progress using built in analytics. Sequence diagram of example where the user creates a flashcard: https://www.mermaidchart.com/app/projects/94fdcc9c-b768-4623-a565-64d9f5744718/d iagrams/1dd472dc-a4d9-4570-9af5-e0aeb8853abd/version/v0.1/edit Component diagram: https://drive.google.com/file/d/1WtllQG5O3hyZBwkA5sO0Bp_Ie6Hlk1Uo/view?usp=shar ing Non-Functional Properties ● Scalability: As the number of uploads increases, the accuracy of flashcard and quiz generation should remain consistent. The system should also optimize storage by deprioritizing old or unused content, for example, material that was only relevant for the midterm but not the final. This ensures that resources are focused on content users actively need. ● Efficiency: Most app features are not memory- or compute-intensive, so the mobile app should feel snappy and responsive. For', "more demanding features like LLM-powered content generation, the system should support streaming responses to maintain a sense of responsiveness and minimize perceived lag ● Availability and Reliability: The app should maintain a service-level objective (SLO) of 99.55% uptime monthly. Even if external services like OpenAI go down, users must still be able to access previously generated flashcards. This ensures uninterrupted learning and allows the system to scale during usage spikes without compromising access ● Security and Privacy: Security and privacy are a core priority. All uploaded documents, including potentially copyrighted material, are only accessible to authorized users. Personal data is encrypted both at rest and in transit. The system supports secure logins via OAuth and two-factor authentication, and users have full control over the visibility of their study activity. Data consent and deletion options are also available to comply with privacy best practices. Human Values ● Self-direction: The application empowers users to engage with their course material in the way that best suits their learning style. Whether through flashcards for active recall, quizzes for self-assessment, or a mix of both, the app offers flexible tools that make studying more efficient and user-driven. ● Achievement through Social Motivation: The social features of the app such as group quizzes, friend feeds, and leaderboards encourage healthy competition and collective progress. By seeing peers actively learning, students are motivated to push themselves, becoming more ambitious, confident, and capable in their academic preparation. Stakeholders and Conflicts study.io has three main stakeholders: 1. The general users (students) 2. The developers (who have to take note of privacy standards, security standards, etc) 3. The owners of material that is posted (professor notes, course material, etc) Target Population This app is aimed at students in high school and university who are looking for smarter, more personalized ways to study. With increasing academic demands and diverse learning styles, students benefit from tools that adapt to their needs whether it’s generating flashcards from lecture notes or taking practice quizzes on the go. The app's blend of automation, customization, and social engagement makes it especially useful for students managing multiple courses and tight schedules. (Base diagram structure generated with Claude and then tuned) Low-Fidelity Mockups From left to right: - Home screen where you can view a list of your courses, reviews that are due, and today’s scheduled classes. - Activity of your friends, including cards created and courses reviewed that day. - Creation screen to create flashcards, with an option to use our LLM tool to create flashcards from class notes"]
+for chunk in test_chunk:
+    flashcards = generate_flashcards(chunk)
+    print(flashcards)

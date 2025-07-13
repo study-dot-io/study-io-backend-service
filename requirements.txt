@@ -1,1 +1,18 @@
-flask
+#auth stuff 
+firebase-admin==6.8.0
+google-api-python-client==2.100.0
+google-cloud-firestore==2.21.0
+google-cloud-storage==2.14.0
+supabase==2.16.0
+
+boto3==1.28.0
+flask==2.3.2
+python-dotenv==1.0.0
+PyMuPDF==1.22.5
+openai==0.27.0
+
+# Add pinned transitive dependencies to avoid backtracking, this part cuz running into backtracking issues
+google-auth==2.40.0
+google-auth-httplib2==0.2.0
+google-cloud-core==2.3.3
+cachetools==5.3.1
