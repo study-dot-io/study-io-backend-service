@@ -1,5 +1,5 @@
 #We will process pdf on our own and not feed it to the LLM as garbage input = garbage output
-# Assumption of only text based PDFs
+# Assumption of only text based PDFs can implement images using OCR later
 
 import fitz 
 
@@ -13,6 +13,6 @@ def extract_text_and_chunks(pdf_file, chunk_size=1000):
     return chunks
 
 #testing
-with open("test_files/cs446-d1-study.io.pdf", "rb") as f:
-    chunks = extract_text_and_chunks(f)
-    print(chunks)  
+# with open("test_files/cs446-d1-study.io.pdf", "rb") as f:
+#     chunks = extract_text_and_chunks(f)
+#     print(chunks)  
