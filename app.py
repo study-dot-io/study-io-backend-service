@@ -7,11 +7,17 @@ app = Flask(__name__)
 
 @app.route('/generate_flashcards', methods=['POST'])
 def generate():
-    #auth
-    # token = request.headers.get("Authorization", "").replace("Bearer ", "")
-    # user_id = verify_token(token)
-    # if not user_id:
-    #     return jsonify({"error": "Unauthorized"}), 401
+    '''
+    From the client app we are expecting a json with this structure
+    {
+        "login_token": TOKEN,
+        "file": PDF_FILE
+    }
+    '''
+    token = request.form.get("login_token")
+    user_id = verify_token(token)
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
     
     if 'file' not in request.files:
         return jsonify({"error": "No file provided"}), 400
