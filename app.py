@@ -1,8 +1,9 @@
 from flask import Flask, request, jsonify
-# from auth import verify_token
 from pdf_utils import extract_text_and_chunks
 from llm import generate_flashcards
+from firebase_client import Firebase
 
+db = Firebase.init_db()
 app = Flask(__name__)
 
 @app.route('/generate_flashcards', methods=['POST'])
@@ -15,7 +16,7 @@ def generate():
     }
     '''
     token = request.form.get("login_token")
-    user_id = verify_token(token)
+    user_id = Firebase.verify_token(token)
     if not user_id:
         return jsonify({"error": "Unauthorized"}), 401
     
