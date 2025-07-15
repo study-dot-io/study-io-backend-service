@@ -20,7 +20,7 @@ class Firebase:
             cred = credentials.Certificate(FIREBASE_PATH)
             cls._app = firebase_admin.initialize_app(cred)
             cls._db = firestore.client()
-        return cls_.db
+        return cls._db
     @staticmethod
     def verify_token(token: str) -> str:
         '''

@@ -1,10 +1,23 @@
 from flask import Flask, request, jsonify
 from pdf_utils import extract_text_and_chunks
-from llm import generate_flashcards
-from firebase_client import Firebase
+from services.llm import generate_flashcards
+from services.firebase_client import Firebase
 
 db = Firebase.init_db()
 app = Flask(__name__)
+
+@app.route('/test-db', methods=['GET'])
+def test_db():
+    try:
+        collections = list(db.collections)
+        if collections:
+            print('got')
+            return jsonify({"collections": str(len(collections))})
+        else:
+            print('dont have but okay')
+            return jsonify({"message": "Success"})
+    except Exception as e:
+        return jsonify({"Error": e})
 
 @app.route('/generate_flashcards', methods=['POST'])
 def generate():
