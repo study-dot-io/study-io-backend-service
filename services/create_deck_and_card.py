@@ -44,7 +44,7 @@ def create_card(deck_id: str, front: str, back: str) -> str:
       .collection("cards").document(card_id).set(deck)
     return card_id
 
-def convert_llm_response(uid: str, file_hash: str, content: list, file_name: str) -> dict:
+def convert_llm_response(uid: str, file_hash: str, content: list, file_name: str) -> list:
     '''
     Assuming the llm has the following response
     {
@@ -58,7 +58,15 @@ def convert_llm_response(uid: str, file_hash: str, content: list, file_name: str
     '''
     # Make one deck for each file
     llm_deck_id = create_deck(uid, file_name, file_hash)
+    completed_card_ids = []
     # Iter over the cards in the content and make a card 
     for card in content:
-        new_card = create_card(llm_deck_id, card.front, card.back)
+        try:
+            new_card_id = create_card(llm_deck_id, card.front, card.back)
+            completed_card_ids.append(new_card)
+        # Maybe dont want this card creation to be a blocking thing idk?
+        except Exception as e:
+            continue
+    return completed_card_ids
+            
         
