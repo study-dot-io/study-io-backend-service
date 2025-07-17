@@ -1,10 +1,51 @@
 from flask import Flask, request, jsonify
-# from auth import verify_token
 from pdf_utils import extract_text_and_chunks
-from llm import generate_flashcards
+from services.llm import generate_flashcards
+from services.firebase_client import Firebase
+from services.create_deck_and_card import convert_llm_response
 
+db = Firebase.init_db()
 app = Flask(__name__)
 
+@app.route('/', methods=['GET'])
+def home():
+    print('home')
+    return '<p> Home page </p>'
+
+@app.route('/test-db', methods=['GET'])
+def test_db():
+    print('h1')
+    try:
+        collections = list(db.collections())
+        if collections:
+            print('got')
+            return jsonify({"collections": str(len(collections))})
+        else:
+            print('dont have but okay')
+            return jsonify({"message": "Success"})
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route('/test-deck-creation', methods=['POST'])
+def test_deck_creation():
+    content = [
+        {"test1": "back1"},
+        {"test2": "back2"},
+        {"test3": "back3"},
+    ]
+    dummy_uid = "aditya1235"
+    dummy_deck_name = "testdeck4"
+    dummy_file_hash = "filehash4"
+    dummy_file_name = "filename4.pdf"
+    try:
+        cards = convert_llm_response(dummy_uid, dummy_file_hash, content, dummy_file_name, db)
+    except Exception as e:
+        print('cb')
+        print(f'Exception in main: {e}')
+    print(f'cards: {len(cards)}')
+    return jsonify({"cards": len(cards)})
+    
+    
 @app.route('/generate_flashcards', methods=['POST'])
 def generate():
     '''
@@ -15,7 +56,7 @@ def generate():
     }
     '''
     token = request.form.get("login_token")
-    user_id = verify_token(token)
+    user_id = Firebase.verify_token(token)
     if not user_id:
         return jsonify({"error": "Unauthorized"}), 401
     
