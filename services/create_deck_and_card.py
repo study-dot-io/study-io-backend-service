@@ -7,7 +7,7 @@ from enum import Enum
 def compute_file_hash(file_content: bytes) -> str:
     return hashlib.sha256(file_bytes).hexdigest()
 
-def create_deck(uid: str, deck_name: str, file_hash:str) -> str:
+def create_deck(uid: str, deck_name: str, file_hash:str, db) -> str:
     '''
     uid: comes from the validated user token
     deck_name: name for the deck gen by LLM
@@ -20,7 +20,7 @@ def create_deck(uid: str, deck_name: str, file_hash:str) -> str:
         "fileHash": file_hash,
         "createdAt": int(time.time())
     }
-    db.collection("users").document(user_id)\
+    db.collection("users").document(uid)\
       .collection("decks").document(deck_id).set(deck)
     return deck_id
 
@@ -31,7 +31,7 @@ class CardType(Enum):
     REVIEW = 2
     RELEARNING = 3
     
-def create_card(deck_id: str, front: str, back: str) -> str:
+def create_card(uid: str, deck_id: str, front: str, back: str, db) -> str:
     card_id = str(uuid.uuid4())
     card = {
         "id": card_id,
@@ -40,11 +40,12 @@ def create_card(deck_id: str, front: str, back: str) -> str:
         "back": back,
         "createdAt": int(time.time())
     }
-    db.collection("users").document(user_id)\
-      .collection("cards").document(card_id).set(deck)
+    db.collection("users").document(uid) \
+    .collection("decks").document(deck_id) \
+    .collection("cards").document(card_id).set(card)
     return card_id
 
-def convert_llm_response(uid: str, file_hash: str, content: list, file_name: str) -> list:
+def convert_llm_response(uid: str, file_hash: str, content: list, file_name: str, db) -> list:
     '''
     Assuming the llm has the following response
     {
@@ -57,15 +58,20 @@ def convert_llm_response(uid: str, file_hash: str, content: list, file_name: str
     Also want to store filehash in the deck - modify on app
     '''
     # Make one deck for each file
-    llm_deck_id = create_deck(uid, file_name, file_hash)
+    llm_deck_id = create_deck(uid, file_name, file_hash, db)
     completed_card_ids = []
     # Iter over the cards in the content and make a card 
     for card in content:
         try:
-            new_card_id = create_card(llm_deck_id, card.front, card.back)
-            completed_card_ids.append(new_card)
+            # Ideally should only have 1 key and 1 val
+            for front, back in card.items():
+                new_card_id = create_card(uid, llm_deck_id, front, back, db)
+            print(f'new_card id: {new_card_id}')
+            completed_card_ids.append(new_card_id)
+            print('card done')
         # Maybe dont want this card creation to be a blocking thing idk?
         except Exception as e:
+            print('Error: ', e)
             continue
     return completed_card_ids
             

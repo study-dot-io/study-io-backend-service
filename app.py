@@ -3,6 +3,7 @@ from pdf_utils import extract_text_and_chunks
 from services.llm import generate_flashcards
 from services.firebase_client import Firebase
 from services.create_deck_and_card import convert_llm_response
+
 db = Firebase.init_db()
 app = Flask(__name__)
 
@@ -25,18 +26,23 @@ def test_db():
     except Exception as e:
         return jsonify({"error": str(e)})
 
-@app.route('/test-deck-creation', methods=['GET'])
+@app.route('/test-deck-creation', methods=['POST'])
 def test_deck_creation():
-    print('hi')
     content = [
         {"test1": "back1"},
         {"test2": "back2"},
         {"test3": "back3"},
     ]
-    dummy_uid = "dummyuid"
-    dummy_deck_name = "testdeck"
-    dummy_file_hash = "filehash"
-    convert_llm_response(dummy_uid, dummy_file_hash, content, dummy_file_name)
+    dummy_uid = "aditya1235"
+    dummy_deck_name = "testdeck4"
+    dummy_file_hash = "filehash4"
+    dummy_file_name = "filename4.pdf"
+    try:
+        cards = convert_llm_response(dummy_uid, dummy_file_hash, content, dummy_file_name, db)
+    except Exception as e:
+        print('cb')
+        print(f'Exception in main: {e}')
+    print(f'cards: {len(cards)}')
     return jsonify({"cards": len(cards)})
     
     
