@@ -16,7 +16,7 @@ Text:
 
 Return only the JSON list, like:
 [
-  {{"back": "...", "front": "..."}},
+  {{"front": "...", "back": "..."}},
   ...
 ]
 """

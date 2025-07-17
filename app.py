@@ -2,49 +2,14 @@ from flask import Flask, request, jsonify
 from pdf_utils import extract_text_and_chunks
 from services.llm import generate_flashcards
 from services.firebase_client import Firebase
-from services.create_deck_and_card import convert_llm_response
+from services.create_deck_and_card import CreateDeckAndCard
 
 db = Firebase.init_db()
 app = Flask(__name__)
 
 @app.route('/', methods=['GET'])
 def home():
-    print('home')
-    return '<p> Home page </p>'
-
-@app.route('/test-db', methods=['GET'])
-def test_db():
-    print('h1')
-    try:
-        collections = list(db.collections())
-        if collections:
-            print('got')
-            return jsonify({"collections": str(len(collections))})
-        else:
-            print('dont have but okay')
-            return jsonify({"message": "Success"})
-    except Exception as e:
-        return jsonify({"error": str(e)})
-
-@app.route('/test-deck-creation', methods=['POST'])
-def test_deck_creation():
-    content = [
-        {"test1": "back1"},
-        {"test2": "back2"},
-        {"test3": "back3"},
-    ]
-    dummy_uid = "aditya1235"
-    dummy_deck_name = "testdeck4"
-    dummy_file_hash = "filehash4"
-    dummy_file_name = "filename4.pdf"
-    try:
-        cards = convert_llm_response(dummy_uid, dummy_file_hash, content, dummy_file_name, db)
-    except Exception as e:
-        print('cb')
-        print(f'Exception in main: {e}')
-    print(f'cards: {len(cards)}')
-    return jsonify({"cards": len(cards)})
-    
+    return '<p> Home </p>'
     
 @app.route('/generate_flashcards', methods=['POST'])
 def generate():
@@ -56,10 +21,11 @@ def generate():
     }
     '''
     token = request.form.get("login_token")
-    user_id = Firebase.verify_token(token)
+    # user_id = Firebase.verify_token(token)
+    user_id = "aditya_final_test123"
     if not user_id:
         return jsonify({"error": "Unauthorized"}), 401
-    
+    create_deck_and_card = CreateDeckAndCard(db, uid)
     if 'file' not in request.files:
         return jsonify({"error": "No file provided"}), 400
     pdf_file = request.files['file']
@@ -70,7 +36,10 @@ def generate():
             chunk_cards = generate_flashcards(chunk)
             if chunk_cards:
                 cards += chunk_cards
-        return jsonify(cards), 200
+        # Add the cards and the deck to the db
+        final_cards = create_deck_and_card.convert_llm_response(cards, pdf_file.filename)
+        # Currently returning a list of card ids -> easy for 
+        return jsonify({"cards": final_cards}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
