@@ -36,7 +36,6 @@ def generate():
             chunk_cards = generate_flashcards(chunk)
             if chunk_cards:
                 cards += chunk_cards
-        print(f'card: {cards[0]}')
         # Add the cards and the deck to the db
         final_cards = create_deck_and_card.convert_llm_response(cards, pdf_file.filename)
         # Currently returning a list of card ids -> easy for 
