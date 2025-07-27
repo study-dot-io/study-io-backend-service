@@ -11,7 +11,7 @@ class CreateDeckAndCard:
     def __init__(self, db, uid: str):
         self.db = db
         self.uid = uid
-    def create_deck(self, deck_name: str) -> str:
+    def create_deck(self, deck_name: str) -> dict:
         '''
         uid: comes from the validated user token
         deck_name: name for the deck gen by LLM
@@ -24,7 +24,7 @@ class CreateDeckAndCard:
         }
         self.db.collection("users").document(self.uid)\
         .collection("decks").document(deck_id).set(deck)
-        return deck_id
+        return deck
         
     def create_card(self, deck_id: str, front: str, back: str) -> dict:
         card_id = str(uuid.uuid4())
@@ -53,17 +53,17 @@ class CreateDeckAndCard:
         This deck has a collection of cards
         '''
         # Make one deck for each file
-        llm_deck_id = self.create_deck(file_name)
+        llm_deck = self.create_deck(file_name)
         completed_cards = []
         # Iter over the cards in the content and make a card 
         for card in content:
             try:
-                new_card = self.create_card(llm_deck_id, card["front"], card["back"])
+                new_card = self.create_card(llm_deck["id"], card["front"], card["back"])
                 completed_cards.append(new_card)
             # Maybe dont want this card creation to be blocking
             except Exception as e:
                 print('Error in card creation: ', e)
                 continue
-        return completed_cards
+        return (completed_cards, llm_deck)
                 
             
