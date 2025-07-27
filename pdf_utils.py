@@ -3,8 +3,9 @@
 
 import fitz 
 
-def extract_text_and_chunks(pdf_file, chunk_size=1000):
-    doc = fitz.open(stream=pdf_file.read(), filetype="pdf")
+def extract_text_and_chunks(pdf_file_bytes, chunk_size=1000):
+    doc = fitz.open(filetype="pdf", stream=pdf_file_bytes)
+    # doc = fitz.open(stream=pdf_file.read(), filetype="pdf")
     full_text = ""
     for page in doc:
         full_text += page.get_text()
