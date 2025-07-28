@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from typing import List, TypedDict
-import sys
 
 class Deck(TypedDict, total=False):
     id: str
