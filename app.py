@@ -4,6 +4,7 @@ from services.llm import generate_flashcards
 from services.firebase_client import Firebase
 from firebase_admin import auth
 from services.create_deck_and_card import CreateDeckAndCard
+from services.sync import SyncService, SyncData
 import base64
 
 db = Firebase.init_db()
@@ -82,6 +83,31 @@ def generate():
     except Exception as e:
         response["error"] = f"Error: {e}"
         return jsonify(response, 401)
+
+@app.route('/sync', methods=['POST'])
+def sync():
+    '''
+    Syncs data between the client and the server.
+    '''
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Missing request"}), 400
+
+        token = data.get("token")
+        if not token:
+            return jsonify({"error": "Missing login token"}), 400
+
+        body = SyncData(decks=data.get("decks", []), cards=data.get("cards", []))
+        user_id = Firebase.verify_token(token)
+
+        sync_service = SyncService(db)
+        sync_service.sync_data(user_id, body)
+
+        return jsonify({}), 200
+    
+    except Exception as e:
+        return jsonify({"error": f"Error: {e}"}), 500
         
     
 #Sync service goes here
