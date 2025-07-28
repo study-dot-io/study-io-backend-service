@@ -11,6 +11,10 @@ python-dotenv==1.0.0
 PyMuPDF==1.22.5
 openai==0.27.0
 
+# OCR dependencies for image processing
+Pillow==11.3.0
+pytesseract==0.3.13
+
 # Add pinned transitive dependencies to avoid backtracking, this part cuz running into backtracking issues
 google-auth==2.40.0
 google-auth-httplib2==0.2.0
