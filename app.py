@@ -181,11 +181,10 @@ def sync_endpoint(user_id, data):
 
         # Perform sync
         sync_service = SyncService(db)
-        sync_service.sync_data(user_id, sync_data)
+        new_sync_data = sync_service.sync_data(user_id, sync_data)
 
-        logger.info(f"Successfully synced data for user {user_id}")
-        return jsonify(APIResponse.success(message="Data synced successfully"))
-
+        return jsonify(new_sync_data), 200
+    
     except Exception as e:
         logger.error(f"Error syncing data for user {user_id}: {str(e)}")
         return jsonify(*APIResponse.error("Failed to sync data", "sync_error", 500))
