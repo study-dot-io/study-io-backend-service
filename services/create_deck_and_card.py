@@ -1,8 +1,10 @@
 
+
 import hashlib
 import uuid
 import time
 from enum import Enum
+from services.models import Deck, Card
 
 class CreateDeckAndCard:
     '''
@@ -17,28 +19,22 @@ class CreateDeckAndCard:
         deck_name: name for the deck gen by LLM
         '''
         deck_id = str(uuid.uuid4())
-        deck = {
-            "id": deck_id,
-            "name": deck_name,
-            "createdAt": int(time.time())
-        }
+        deck = Deck(id=deck_id, name=deck_name)
+        deck_dict = deck.__dict__.copy()
+        deck_dict["createdAt"] = int(time.time())
         self.db.collection("users").document(self.uid)\
-        .collection("decks").document(deck_id).set(deck)
-        return deck
+            .collection("decks").document(deck_id).set(deck_dict)
+        return deck_dict
         
     def create_card(self, deck_id: str, front: str, back: str) -> dict:
         card_id = str(uuid.uuid4())
-        card = {
-            "id": card_id,
-            "deckId": deck_id,
-            "front": front,
-            "back": back,
-            "createdAt": int(time.time())
-        }
+        card = Card(id=card_id, deckId=deck_id, front=front, back=back)
+        card_dict = card.__dict__.copy()
+        card_dict["createdAt"] = int(time.time())
         self.db.collection("users").document(self.uid) \
-        .collection("decks").document(deck_id) \
-        .collection("cards").document(card_id).set(card)
-        return card
+            .collection("decks").document(deck_id) \
+            .collection("cards").document(card_id).set(card_dict)
+        return card_dict
 
     def convert_llm_response(self, content: list, file_name: str) -> list:
         '''
